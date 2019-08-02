@@ -35,11 +35,14 @@
                     UserName = "mazariego2011@gmail.com",
                     PhoneNumber = "74437801"
                 };
+
+                var result = await _userHelper.AddUserAsync(user, "123456");
+
+                if (result != IdentityResult.Success)
+                    throw new InvalidOperationException("Could not create the user in seeder");
             }
 
-            var result = await _userHelper.AddUserAsync(user, "123456");
-            if (result != IdentityResult.Success)
-                throw new InvalidOperationException("Could not create the user in seeder");
+            
 
             if (!_context.Products.Any())
             {

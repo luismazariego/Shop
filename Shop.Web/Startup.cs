@@ -42,7 +42,9 @@
 
             services.AddTransient<SeedDb>();//no queda la inyeccion, se destruye
 
-            services.AddScoped<IRepository, Repository>();//la inyeccion queda en todo el ciclo de vida de la app.
+            services.AddScoped<IProductRepository, ProductRepository>();//la inyeccion queda en todo el ciclo de vida de la app.
+
+            services.AddScoped<ICountryRepository, CountryRepository>();
 
             services.AddScoped<IUserHelper, UserHelper>();
 
