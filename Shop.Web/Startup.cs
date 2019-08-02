@@ -31,7 +31,9 @@ namespace Shop.Web
                 cfg.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            services.AddTransient<SeedDb>();
+            services.AddTransient<SeedDb>();//no queda la inyeccion, se destruye
+
+            services.AddScoped<IRepository, Repository>();//la inyeccion queda en todo el ciclo de vida de la app.
 
             services.Configure<CookiePolicyOptions>(options =>
             {
