@@ -1,20 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Shop.Web.Data;
-using Shop.Web.Data.Entities;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Shop.Web.Controllers
+﻿namespace Shop.Web.Controllers
 {
+    using System.Threading.Tasks;
+    using Data;
+    using Data.Entities;
+    using Helpers;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.EntityFrameworkCore;    
+
     public class ProductsController : Controller
     {
         private readonly IRepository _repository;
+        private readonly IUserHelper _userHelper;
 
-        public ProductsController(IRepository repository)
+        public ProductsController(IRepository repository, IUserHelper userHelper)
         {
             _repository = repository;
+            _userHelper = userHelper;
         }
 
         // GET: Products
@@ -53,6 +54,8 @@ namespace Shop.Web.Controllers
         {
             if (ModelState.IsValid)
             {
+                //TODO: Change for the logged user
+                product.User = await _userHelper.GetUserByEmailAsync("mazariego2011@gmail.com");
                 _repository.AddProduct(product);
                 await _repository.SaveAllAsync();
                 return RedirectToAction(nameof(Index));
@@ -91,6 +94,8 @@ namespace Shop.Web.Controllers
             {
                 try
                 {
+                    //TODO: Change for the logged user
+                    product.User = await _userHelper.GetUserByEmailAsync("mazariego2011@gmail.com");
                     _repository.UpdateProduct(product);
                     await _repository.SaveAllAsync();
                 }
@@ -138,6 +143,6 @@ namespace Shop.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        
+
     }
 }

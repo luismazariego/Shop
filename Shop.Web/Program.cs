@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -27,8 +28,17 @@
             var scopeFactory = host.Services.GetService<IServiceScopeFactory>();
             using(var scope = scopeFactory.CreateScope())
             {
-                var seeder = scope.ServiceProvider.GetService<SeedDb>();
-                seeder.SeedAsync().Wait();
+                try
+                {
+                    var seeder = scope.ServiceProvider.GetService<SeedDb>();
+                    seeder.SeedAsync().Wait();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Error :" + ex.Message);
+                    throw;
+                }
+                
             }
         }
 
