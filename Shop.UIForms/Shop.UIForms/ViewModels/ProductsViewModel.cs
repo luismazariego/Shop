@@ -10,11 +10,18 @@
     {
         private readonly ApiService _apiService;
         private ObservableCollection<Product> _products;
+        private bool _isRefreshing;
 
         public ObservableCollection<Product> Products
         {
             get => _products;
             set => SetValue(ref _products, value);
+        }
+
+        public bool IsRefreshing
+        {
+            get => _isRefreshing;
+            set => SetValue(ref _isRefreshing, value);
         }
 
         public ProductsViewModel()
@@ -25,10 +32,14 @@
 
         private async void LoadProducts()
         {
+            IsRefreshing = true;
+
             var response = await _apiService.GetListAsync<Product>(
                 "https://shopluis.azurewebsites.net",
                 "/api",
                 "/products");
+
+            IsRefreshing = false;
 
             if (!response.IsSuccess)
             {
