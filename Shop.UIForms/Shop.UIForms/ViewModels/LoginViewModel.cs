@@ -1,11 +1,12 @@
 ﻿using GalaSoft.MvvmLight.Command;
+using Shop.UIForms.Views;
 using System;
 using System.Windows.Input;
 using Xamarin.Forms;
 
 namespace Shop.UIForms.ViewModels
 {
-    public class LoginViewModel
+    public class LoginViewModel : BaseViewModel
     {
         public string Email { get; set; }
 
@@ -47,10 +48,14 @@ namespace Shop.UIForms.ViewModels
                 return;
             }
 
-            await Application.Current.MainPage.DisplayAlert(
-                    "OK",
-                    "Fuck Yeah!!",
-                    "Accept");
+            //await Application.Current.MainPage.DisplayAlert(
+            //        "OK",
+            //        "Fuck Yeah!!",
+            //        "Accept");
+
+            //Antes de llamar la page debemos instanciar la viewmodelasociada
+            MainViewModel.GetInstance().Products = new ProductsViewModel();
+            await Application.Current.MainPage.Navigation.PushAsync(new ProductsPage());
 
         }
     }
