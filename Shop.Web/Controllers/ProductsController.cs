@@ -7,10 +7,12 @@
     using Data;
     using Data.Entities;
     using Helpers;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Shop.Web.Models;
 
+    [Authorize]
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
@@ -79,8 +81,8 @@
                 }
 
                 var product = ToProduct(view, path);
-                //TODO: Change for the logged user
-                product.User = await _userHelper.GetUserByEmailAsync("mazariego2011@gmail.com");
+                
+                product.User = await _userHelper.GetUserByEmailAsync(User.Identity.Name);
                 await _productRepository.CreateAsync(product);
                 //await _productRepository.();
                 return RedirectToAction(nameof(Index));
@@ -168,9 +170,8 @@
                     }
 
                     var product = ToProduct(view, path);
-
-                    //TODO: Change for the logged user
-                    product.User = await _userHelper.GetUserByEmailAsync("mazariego2011@gmail.com");
+                    
+                    product.User = await _userHelper.GetUserByEmailAsync(User.Identity.Name);
                     await _productRepository.UpdateAsync(product);
                     //await _productRepository.SaveAllAsync();
                 }
