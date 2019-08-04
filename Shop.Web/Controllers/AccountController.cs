@@ -220,5 +220,10 @@
             }
             return BadRequest();
         }
+
+        public IActionResult NotAuthorized()
+        {
+            return View();
+        }
     }
 }
