@@ -1,11 +1,12 @@
 ﻿namespace Shop.Web.Data.Repositories
 {
-    using System.Linq;
-    using System.Threading.Tasks;
     using Entities;
     using Helpers;
     using Microsoft.EntityFrameworkCore;
-    using Shop.Web.Models;
+    using Models;
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     public class OrderRepository : GenericRepository<Order>, IOrderRepository
     {
@@ -22,11 +23,15 @@
         {
             var user = await _userHelper.GetUserByEmailAsync(userName);
             if (user == null)
+            {
                 return;
+            }
 
             var product = await _context.Products.FindAsync(model.ProductId);
             if (product == null)
+            {
                 return;
+            }
 
             var orderDetailTemp = await _context.OrderDetailsTemps
                 .Where(odt => odt.User == user && odt.Product == product)
@@ -53,12 +58,67 @@
             await _context.SaveChangesAsync();
         }
 
+        public async Task<bool> ConfirmOrderAsync(string userName)
+        {
+            var user = await _userHelper.GetUserByEmailAsync(userName);
+            if (user == null)
+                return false;
+
+            var orderTemps = await _context.OrderDetailsTemps
+                .Include(o => o.Product)
+                .Where(o => o.User == user)
+                .ToListAsync();
+
+            if (orderTemps == null || orderTemps.Count == 0)
+                return false;
+
+            //Select convierte una coleccion a otra
+            //aca una coleccion de ordenes temporales
+            //a una de detalle de ordenes
+            //para luego asociarlos a la orden
+            var details = orderTemps.Select(o => new OrderDetail
+            {
+                Price = o.Price,
+                Product = o.Product,
+                Quantity = o.Quantity
+            }).ToList();
+
+            //Agrega la orden completa
+            //con el usuario
+            //y sus detalles
+            var order = new Order
+            {
+                OrderDate = DateTime.UtcNow,
+                User = user,
+                Items = details
+            };
+
+            _context.Orders.Add(order);
+            _context.OrderDetailsTemps.RemoveRange(orderTemps);//Borrar el "carrito de compras"
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task DeleteDetailTempAsync(int id)
+        {
+            var orderDetailTemp = await _context.OrderDetailsTemps.FindAsync(id);
+            if (orderDetailTemp == null)
+            {
+                return;
+            }
+
+            _context.OrderDetailsTemps.Remove(orderDetailTemp);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<IQueryable<OrderDetailsTemp>> GetDetailsTempsAsync(string userName)
         {
             var user = await _userHelper.GetUserByEmailAsync(userName);
 
             if (user == null)
+            {
                 return null;
+            }
 
             return _context.OrderDetailsTemps
                 .Include(o => o.Product)
@@ -71,13 +131,16 @@
             var user = await _userHelper.GetUserByEmailAsync(userName);
 
             if (user == null)
-                return null;
-
-            if(await _userHelper.IsUserInRoleAsync(user, "Admin"))
             {
-                return _context.Orders
+                return null;
+            }
+
+            if (await _userHelper.IsUserInRoleAsync(user, "Admin"))
+            {
+                return _context.Orders                    
+                    .Include(u => u.User)
                     .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
+                    .ThenInclude(i => i.Product)                    
                     .OrderByDescending(o => o.OrderDate);
             }
 
