@@ -1,6 +1,7 @@
 ﻿namespace Shop.Web.Data
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Entities;
@@ -10,13 +11,13 @@
     public class SeedDb
     {
         private readonly DataContext _context;
-        private readonly IUserHelper _userHelper;        
+        private readonly IUserHelper _userHelper;
         private readonly Random _random;
 
         public SeedDb(DataContext context, IUserHelper userHelper)
         {
             _context = context;
-            _userHelper = userHelper;            
+            _userHelper = userHelper;
             _random = new Random();
         }
 
@@ -27,8 +28,26 @@
             await _userHelper.CheckRoleAsync("Admin");
             await _userHelper.CheckRoleAsync("Customer");
 
+            if (!_context.Countries.Any())
+            {
+                var cities = new List<City>
+                {
+                    new City { Name = "Medellin" },
+                    new City { Name = "Bogota" },
+                    new City { Name = "Cali" }
+                };
+
+                _context.Countries.Add(new Country
+                {
+                    Cities = cities,
+                    Name = "Colombia"
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
             var user = await _userHelper.GetUserByEmailAsync("mazariego2011@gmail.com");
-            if(user == null)
+            if (user == null)
             {
                 user = new User
                 {
@@ -36,7 +55,10 @@
                     LastName = "Mazariego",
                     Email = "mazariego2011@gmail.com",
                     UserName = "mazariego2011@gmail.com",
-                    PhoneNumber = "74437801"
+                    PhoneNumber = "74437801",
+                    Address = "Tonacatepeque, San Salvador",
+                    CityId = _context.Countries.FirstOrDefault().Cities.FirstOrDefault().Id,
+                    City = _context.Countries.FirstOrDefault().Cities.FirstOrDefault()
                 };
 
                 var result = await _userHelper.AddUserAsync(user, "123456");
