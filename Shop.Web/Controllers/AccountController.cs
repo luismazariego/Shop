@@ -6,23 +6,26 @@
     using System.Security.Claims;
     using System.Text;
     using System.Threading.Tasks;
+    using Data;
+    using Data.Entities;
     using Helpers;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Configuration;
-    using Microsoft.IdentityModel.Tokens;
-    using Data.Entities;
-    using Models;    
-
+    using Microsoft.IdentityModel.Tokens;    
+    using Models;
+    
     public class AccountController : Controller
     {
         private readonly IUserHelper _userHelper;
         private readonly IConfiguration _configuration;
+        private readonly ICountryRepository _countryRepository;
 
-        public AccountController(IUserHelper userHelper, IConfiguration configuration)
+        public AccountController(IUserHelper userHelper, IConfiguration configuration, ICountryRepository countryRepository)
         {
             _userHelper = userHelper;
             _configuration = configuration;
+            _countryRepository = countryRepository;
         }
 
         public IActionResult Login()
@@ -64,7 +67,12 @@
 
         public IActionResult Register()
         {
-            return View();
+            var model = new RegisterNewUserViewModel
+            {
+                Countries = _countryRepository.GetComboCountries(),
+                Cities = _countryRepository.GetComboCities(0)
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -75,12 +83,18 @@
                 var user = await _userHelper.GetUserByEmailAsync(model.Username);
                 if (user == null)
                 {
+                    var city = await _countryRepository.GetCityAsync(model.CityId);
+
                     user = new User
                     {
                         FirstName = model.FirstName,
                         LastName = model.LastName,
                         Email = model.Username,
-                        UserName = model.Username
+                        UserName = model.Username,
+                        Address = model.Address,
+                        PhoneNumber = model.PhoneNumber,
+                        CityId = model.CityId,
+                        City = city
                     };
 
                     var result = await _userHelper.AddUserAsync(user, model.Password);
@@ -224,6 +238,12 @@
         public IActionResult NotAuthorized()
         {
             return View();
+        }
+
+        public async Task<JsonResult> GetCitiesAsync(int countryId)
+        {
+            var country = await _countryRepository.GetCountryWithCitiesAsync(countryId);
+            return Json(country.Cities.OrderBy(c => c.Name));
         }
     }
 }
